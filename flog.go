@@ -34,7 +34,7 @@ func Generate(option *Option) error {
 			}
 			log := NewLog(option.Format, created)
 			writer.Write([]byte(log + "\n"))
-			created = created.Add(time.Duration(option.Sleep*float64(time.Second/time.Millisecond)) * time.Millisecond)
+			created = created.Add(delay)
 		}
 	}
 
