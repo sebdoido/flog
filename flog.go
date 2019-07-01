@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -27,10 +28,22 @@ func Generate(option *Option) error {
 		return err
 	}
 
-	if option.Forever {
+	if option.Spike {
+		rand.Seed(time.Now().UTC().UnixNano())
+	}
+
+	if option.Infinite {
 		for {
 			if delay > 0 {
 				time.Sleep(delay)
+			}
+			if option.Spike {
+				if rand.Intn(option.RandomSpike)+1 == option.RandomSpike {
+					for line := 0; line < option.Number; line++ {
+						log := NewLog(option.Format, created)
+						writer.Write([]byte(log + "\n"))
+					}
+				}
 			}
 			log := NewLog(option.Format, created)
 			writer.Write([]byte(log + "\n"))

@@ -66,7 +66,7 @@ Options:
                            with "number" option, the logs will be split whenever the maximum number of lines is reached.
                            with "byte" option, the logs will be split whenever the maximum size in bytes is reached.
   -w, --overwrite          overwrite the existing log files.
-  -l, --loop               loop output forever until killed.
+  -l, --loop               loop output Infinite until killed.
 ```
 
 ```console

@@ -28,7 +28,7 @@ Options:
                            with "number" option, the logs will be split whenever the maximum number of lines is reached.
                            with "byte" option, the logs will be split whenever the maximum size in bytes is reached.
   -w, --overwrite          overwrite the existing log files.
-  -l, --loop               loop output forever until killed.
+  -l, --loop               loop output Infinite until killed.
 `
 
 var validFormats = []string{"apache_common", "apache_combined", "apache_error", "rfc3164", "rfc5424", "common_log"}
@@ -36,16 +36,18 @@ var validTypes = []string{"stdout", "log", "gz"}
 
 // Option defines log generator options
 type Option struct {
-	Format    string
-	Output    string
-	Type      string
-	Number    int
-	Bytes     int
-	Sleep     float64
-	Delay     float64
-	SplitBy   int
-	Overwrite bool
-	Forever   bool
+	Format      string
+	Output      string
+	Type        string
+	Number      int
+	Bytes       int
+	Sleep       float64
+	Spike       bool
+	RandomSpike int
+	Delay       float64
+	SplitBy     int
+	Overwrite   bool
+	Infinite    bool
 }
 
 func init() {
@@ -67,16 +69,18 @@ func errorExit(err error) {
 
 func defaultOptions() *Option {
 	return &Option{
-		Format:    "apache_common",
-		Output:    "generated.log",
-		Type:      "stdout",
-		Number:    1000,
-		Bytes:     0,
-		Sleep:     0.0,
-		Delay:     0.0,
-		SplitBy:   0,
-		Overwrite: false,
-		Forever:   false,
+		Format:      "apache_common",
+		Output:      "generated.log",
+		Type:        "stdout",
+		Number:      20,
+		Spike:       false,
+		RandomSpike: 100,
+		Bytes:       0,
+		Sleep:       0.0,
+		Delay:       0.0,
+		SplitBy:     0,
+		Overwrite:   false,
+		Infinite:    false,
 	}
 }
 
@@ -148,12 +152,14 @@ func ParseOptions() *Option {
 	output := pflag.StringP("output", "o", opts.Output, "Output filename. Path-like filename is allowed")
 	logType := pflag.StringP("type", "t", opts.Type, "Log output type")
 	number := pflag.IntP("number", "n", opts.Number, "Number of lines to generate")
+	randomSpike := pflag.IntP("randomSpike", "r", opts.RandomSpike, "Random spike noise")
 	bytes := pflag.IntP("bytes", "b", opts.Bytes, "Size of logs to generate. (in bytes)")
+	spike := pflag.BoolP("load", "l", false, "Load test (spikes)")
 	sleep := pflag.Float64P("sleep", "s", opts.Sleep, "Creation time interval for each log (in seconds)")
 	delay := pflag.Float64P("delay", "d", opts.Delay, "Delay log generation speed (in seconds)")
 	splitBy := pflag.IntP("split", "p", opts.SplitBy, "Set the maximum number of lines or maximum size in bytes of a log file")
 	overwrite := pflag.BoolP("overwrite", "w", false, "Overwrite the existing log files")
-	forever := pflag.BoolP("loop", "l", false, "Loop output forever until killed")
+	infinite := pflag.BoolP("infinite", "i", false, "Infinite Loop until killed")
 
 	pflag.Parse()
 
@@ -174,6 +180,9 @@ func ParseOptions() *Option {
 	if opts.Number, err = ParseNumber(*number); err != nil {
 		errorExit(err)
 	}
+	if opts.RandomSpike, err = ParseNumber(*randomSpike); err != nil {
+		errorExit(err)
+	}
 	if opts.Bytes, err = ParseBytes(*bytes); err != nil {
 		errorExit(err)
 	}
@@ -188,6 +197,7 @@ func ParseOptions() *Option {
 	}
 	opts.Output = *output
 	opts.Overwrite = *overwrite
-	opts.Forever = *forever
+	opts.Infinite = *infinite
+	opts.Spike = *spike
 	return opts
 }
